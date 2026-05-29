@@ -1,0 +1,2484 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中国戒网瘾学校动态地图</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            background: #0a0e27;
+            color: #e0e6f0;
+            overflow-x: hidden;
+        }
+        .header {
+            text-align: center;
+            padding: 20px 20px 10px;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f4e 100%);
+            border-bottom: 1px solid rgba(100, 140, 255, 0.2);
+        }
+        .header h1 {
+            font-size: 28px;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+        .header p {
+            font-size: 13px;
+            color: #8892b0;
+        }
+        .toolbar {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 10px 20px;
+            background: rgba(15, 20, 50, 0.9);
+            border-bottom: 1px solid rgba(100, 140, 255, 0.15);
+            flex-wrap: wrap;
+        }
+        .toolbar button {
+            padding: 8px 16px;
+            border: 1px solid rgba(100, 140, 255, 0.3);
+            border-radius: 6px;
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+            color: #fff;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .toolbar button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);
+        }
+        .toolbar button.btn-warn {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+        .toolbar button.btn-warn:hover {
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+        .toolbar button.btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+        .toolbar button.btn-danger:hover {
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            padding: 12px 20px;
+            background: rgba(20, 25, 60, 0.8);
+            border-bottom: 1px solid rgba(100, 140, 255, 0.1);
+            flex-wrap: wrap;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-item .num {
+            font-size: 22px;
+            font-weight: bold;
+            color: #60a5fa;
+        }
+        .stat-item .label {
+            font-size: 11px;
+            color: #8892b0;
+        }
+        .legend-bar {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 8px 20px;
+            background: rgba(20, 25, 60, 0.5);
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #a0aec0;
+        }
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        #chart-container {
+            width: 100%;
+            height: 680px;
+            position: relative;
+        }
+        .timeline-section {
+            padding: 15px 30px;
+            background: rgba(20, 25, 60, 0.6);
+            border-top: 1px solid rgba(100, 140, 255, 0.15);
+        }
+        .timeline-title {
+            font-size: 16px;
+            color: #60a5fa;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        .timeline {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+        .timeline-item {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            border: 1px solid rgba(100, 140, 255, 0.3);
+            background: rgba(30, 40, 80, 0.6);
+            color: #a0aec0;
+            transition: all 0.3s;
+        }
+        .timeline-item:hover, .timeline-item.active {
+            background: rgba(96, 165, 250, 0.3);
+            border-color: #60a5fa;
+            color: #fff;
+        }
+        .timeline-item.event-critical {
+            border-color: rgba(248, 113, 113, 0.5);
+        }
+        .timeline-item.event-critical:hover, .timeline-item.event-critical.active {
+            background: rgba(248, 113, 113, 0.2);
+            border-color: #f87171;
+        }
+        .timeline-item.event-policy {
+            border-color: rgba(52, 211, 153, 0.5);
+        }
+        .timeline-item.event-policy:hover, .timeline-item.event-policy.active {
+            background: rgba(52, 211, 153, 0.2);
+            border-color: #34d399;
+        }
+        .info-panel {
+            position: fixed;
+            top: 0;
+            right: -450px;
+            width: 420px;
+            height: 100vh;
+            background: linear-gradient(180deg, #111638 0%, #0a0e27 100%);
+            border-left: 1px solid rgba(100, 140, 255, 0.2);
+            z-index: 1000;
+            transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+            box-shadow: -10px 0 40px rgba(0, 0, 0, 0.5);
+        }
+        .info-panel.open {
+            right: 0;
+        }
+        .info-panel-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(100, 140, 255, 0.15);
+            position: sticky;
+            top: 0;
+            background: #111638;
+            z-index: 1;
+        }
+        .info-panel-header h2 {
+            font-size: 18px;
+            color: #e0e6f0;
+            margin-bottom: 8px;
+        }
+        .info-panel-header .status-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .status-closed {
+            background: rgba(248, 113, 113, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(248, 113, 113, 0.3);
+        }
+        .status-open {
+            background: rgba(52, 211, 153, 0.2);
+            color: #34d399;
+            border: 1px solid rgba(52, 211, 153, 0.3);
+        }
+        .status-unknown {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 30px;
+            height: 30px;
+            border: 1px solid rgba(100, 140, 255, 0.3);
+            border-radius: 50%;
+            background: transparent;
+            color: #a0aec0;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .close-btn:hover {
+            background: rgba(248, 113, 113, 0.2);
+            border-color: #f87171;
+            color: #f87171;
+        }
+        .info-content {
+            padding: 20px;
+        }
+        .info-row {
+            display: flex;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(100, 140, 255, 0.08);
+        }
+        .info-row .label {
+            width: 90px;
+            flex-shrink: 0;
+            font-size: 13px;
+            color: #8892b0;
+        }
+        .info-row .value {
+            flex: 1;
+            font-size: 13px;
+            color: #e0e6f0;
+            word-break: break-all;
+        }
+        .info-row .value a {
+            color: #60a5fa;
+            text-decoration: none;
+        }
+        .info-row .value a:hover {
+            text-decoration: underline;
+        }
+        .info-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(100, 140, 255, 0.15);
+        }
+        .info-actions button {
+            flex: 1;
+            padding: 10px 16px;
+            border: 1px solid rgba(100, 140, 255, 0.3);
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            color: #fff;
+        }
+        .btn-edit {
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+        }
+        .btn-edit:hover {
+            box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);
+        }
+        .btn-delete {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+        .btn-delete:hover {
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+        .tianyancha-btn {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 20px;
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            color: #fff;
+            border-radius: 6px;
+            font-size: 13px;
+            text-decoration: none;
+            transition: transform 0.2s;
+        }
+        .tianyancha-btn:hover {
+            transform: scale(1.05);
+        }
+        .event-section {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(248, 113, 113, 0.05);
+            border: 1px solid rgba(248, 113, 113, 0.15);
+            border-radius: 8px;
+        }
+        .event-section h3 {
+            font-size: 14px;
+            color: #f87171;
+            margin-bottom: 8px;
+        }
+        .event-section p {
+            font-size: 12px;
+            color: #a0aec0;
+            line-height: 1.8;
+        }
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+        .overlay.show {
+            display: block;
+        }
+        /* ===== Form Panel (left slide) ===== */
+        .form-panel {
+            position: fixed;
+            top: 0;
+            left: -500px;
+            width: 480px;
+            height: 100vh;
+            background: linear-gradient(180deg, #111638 0%, #0a0e27 100%);
+            border-right: 1px solid rgba(100, 140, 255, 0.2);
+            z-index: 1001;
+            transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+            box-shadow: 10px 0 40px rgba(0, 0, 0, 0.5);
+        }
+        .form-panel.open {
+            left: 0;
+        }
+        .form-panel-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(100, 140, 255, 0.15);
+            position: sticky;
+            top: 0;
+            background: #111638;
+            z-index: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .form-panel-header h2 {
+            font-size: 18px;
+            color: #e0e6f0;
+        }
+        .form-body {
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            color: #8892b0;
+            margin-bottom: 6px;
+        }
+        .form-group label .required {
+            color: #f87171;
+            margin-left: 2px;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            background: #1a1f3e;
+            border: 1px solid rgba(100, 140, 255, 0.3);
+            border-radius: 6px;
+            color: #e0e6f0;
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #60a5fa;
+        }
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        .form-group select {
+            cursor: pointer;
+        }
+        .form-group select option {
+            background: #1a1f3e;
+            color: #e0e6f0;
+        }
+        .form-row {
+            display: flex;
+            gap: 12px;
+        }
+        .form-row .form-group {
+            flex: 1;
+        }
+        .form-group .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #e0e6f0;
+        }
+        .form-group .checkbox-label input[type="checkbox"] {
+            width: auto;
+            cursor: pointer;
+        }
+        .btn-estimate {
+            display: inline-block;
+            margin-top: 6px;
+            padding: 6px 14px;
+            background: rgba(96, 165, 250, 0.15);
+            border: 1px solid rgba(100, 140, 255, 0.3);
+            border-radius: 4px;
+            color: #60a5fa;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .btn-estimate:hover {
+            background: rgba(96, 165, 250, 0.25);
+        }
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(100, 140, 255, 0.15);
+        }
+        .form-actions button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            color: #fff;
+        }
+        .btn-submit {
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+        }
+        .btn-submit:hover {
+            box-shadow: 0 4px 12px rgba(96, 165, 250, 0.4);
+        }
+        .btn-cancel {
+            background: rgba(100, 100, 120, 0.3);
+            border: 1px solid rgba(100, 140, 255, 0.2);
+        }
+        .btn-cancel:hover {
+            background: rgba(100, 100, 120, 0.5);
+        }
+        /* ===== Delete Confirm Modal ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-overlay.show {
+            display: flex;
+        }
+        .modal-box {
+            background: linear-gradient(180deg, #1a1040 0%, #0f0a20 100%);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            border-radius: 12px;
+            padding: 30px;
+            width: 400px;
+            max-width: 90vw;
+            box-shadow: 0 20px 60px rgba(239, 68, 68, 0.2);
+        }
+        .modal-box h3 {
+            font-size: 18px;
+            color: #f87171;
+            margin-bottom: 12px;
+        }
+        .modal-box p {
+            font-size: 14px;
+            color: #a0aec0;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        .modal-box p strong {
+            color: #e0e6f0;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+        .modal-actions button {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            color: #fff;
+        }
+        .modal-btn-cancel {
+            background: rgba(100, 100, 120, 0.3);
+            border: 1px solid rgba(100, 140, 255, 0.2);
+        }
+        .modal-btn-cancel:hover {
+            background: rgba(100, 100, 120, 0.5);
+        }
+        .modal-btn-confirm-delete {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+        .modal-btn-confirm-delete:hover {
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
+        /* ===== Toast ===== */
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #1a1f4e, #111638);
+            border: 1px solid rgba(100, 140, 255, 0.3);
+            border-radius: 8px;
+            color: #e0e6f0;
+            font-size: 14px;
+            z-index: 3000;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+        .toast.success {
+            border-color: rgba(52, 211, 153, 0.4);
+        }
+        .toast.error {
+            border-color: rgba(239, 68, 68, 0.4);
+        }
+        .footer {
+            text-align: center;
+            padding: 15px;
+            font-size: 11px;
+            color: #4a5568;
+            border-top: 1px solid rgba(100, 140, 255, 0.1);
+        }
+        #importFileInput {
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .info-panel { width: 100%; right: -100%; }
+            .form-panel { width: 100%; left: -100%; }
+            #chart-container { height: 500px; }
+            .header h1 { font-size: 20px; }
+            .stats-bar { gap: 15px; }
+            .toolbar { gap: 6px; padding: 8px 10px; }
+            .toolbar button { padding: 6px 10px; font-size: 12px; }
+            .form-row { flex-direction: column; gap: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>中国戒网瘾学校动态地图</h1>
+        <p>记录从1990年代至今国内网瘾戒治机构/特训学校/行为矫正学校的分布与变迁</p>
+    </div>
+
+    <div class="toolbar">
+        <button onclick="openAddForm()">+ 添加学校</button>
+        <button class="btn-warn" onclick="restoreDefaults()">恢复默认数据</button>
+        <button onclick="exportData()">导出数据</button>
+        <button onclick="document.getElementById('importFileInput').click()">导入数据</button>
+        <input type="file" id="importFileInput" accept=".json" onchange="importData(event)">
+    </div>
+
+    <div class="stats-bar">
+        <div class="stat-item">
+            <div class="num" id="total-count">0</div>
+            <div class="label">收录机构总数</div>
+        </div>
+        <div class="stat-item">
+            <div class="num" id="closed-count">0</div>
+            <div class="label">已关停/取缔</div>
+        </div>
+        <div class="stat-item">
+            <div class="num" id="open-count">0</div>
+            <div class="label">仍在运营</div>
+        </div>
+        <div class="stat-item">
+            <div class="num" id="province-count">0</div>
+            <div class="label">覆盖省份</div>
+        </div>
+    </div>
+
+    <div class="legend-bar">
+        <div class="legend-item"><div class="legend-dot" style="background:#34d399;"></div> 仍在运营</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f87171;"></div> 已关停/取缔</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#fbbf24;"></div> 状态不明</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f472b6; width:14px; height:14px;"></div> 重大事件</div>
+    </div>
+
+    <div id="chart-container"></div>
+
+    <div class="timeline-section">
+        <div class="timeline-title">重要事件时间线（点击可筛选地图上的学校）</div>
+        <div class="timeline" id="timeline"></div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+
+    <!-- Info Panel (right side) -->
+    <div class="info-panel" id="infoPanel">
+        <div class="info-panel-header">
+            <button class="close-btn" id="closeBtn">x</button>
+            <h2 id="panelTitle">学校名称</h2>
+            <span class="status-badge" id="panelStatus"></span>
+        </div>
+        <div class="info-content" id="panelContent"></div>
+    </div>
+
+    <!-- Form Panel (left side) -->
+    <div class="form-panel" id="formPanel">
+        <div class="form-panel-header">
+            <h2 id="formTitle">添加学校</h2>
+            <button class="close-btn" id="formCloseBtn">x</button>
+        </div>
+        <div class="form-body">
+            <div class="form-group">
+                <label>名称 <span class="required">*</span></label>
+                <input type="text" id="f_name" placeholder="学校简称">
+            </div>
+            <div class="form-group">
+                <label>所在省份 <span class="required">*</span></label>
+                <select id="f_province"></select>
+            </div>
+            <div class="form-group">
+                <label>所在市区</label>
+                <input type="text" id="f_city" placeholder="如：郑州市">
+            </div>
+            <div class="form-group">
+                <label>所在旗县</label>
+                <input type="text" id="f_county" placeholder="如：中牟县">
+            </div>
+            <div class="form-group">
+                <label>详细地址</label>
+                <input type="text" id="f_address" placeholder="详细地址">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>成立年份</label>
+                    <input type="number" id="f_year" placeholder="如：2010" min="1990" max="2030">
+                </div>
+                <div class="form-group">
+                    <label>法人/负责人</label>
+                    <input type="text" id="f_legalPerson" placeholder="法人或负责人姓名">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>注册资本</label>
+                    <input type="text" id="f_registeredCapital" placeholder="如：100万元">
+                </div>
+                <div class="form-group">
+                    <label>学费金额</label>
+                    <input type="text" id="f_tuition" placeholder="如：48800元/期">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>师生数量</label>
+                    <input type="text" id="f_students" placeholder="如：约500人">
+                </div>
+                <div class="form-group">
+                    <label>运营状态</label>
+                    <select id="f_status">
+                        <option value="open">运营中</option>
+                        <option value="closed">已关停</option>
+                        <option value="unknown">状态不明</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>统一社会信用代码</label>
+                <input type="text" id="f_creditCode" placeholder="18位信用代码">
+            </div>
+            <div class="form-group">
+                <label>天眼查搜索关键词</label>
+                <input type="text" id="f_tianyanchaKeyword" placeholder="企业名称关键词">
+            </div>
+            <div class="form-group">
+                <label>重大事件</label>
+                <textarea id="f_event" placeholder="描述重大事件经过..."></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>事件发生年份</label>
+                    <input type="number" id="f_eventYear" placeholder="如：2023" min="1990" max="2030">
+                </div>
+                <div class="form-group">
+                    <label>&nbsp;</label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="f_majorEvent">
+                        标记为重大事件
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>备注</label>
+                <textarea id="f_remark" placeholder="其他补充信息..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>经纬度</label>
+                <div class="form-row">
+                    <div class="form-group">
+                        <input type="number" id="f_lng" placeholder="经度" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <input type="number" id="f_lat" placeholder="纬度" step="0.01">
+                    </div>
+                </div>
+                <button class="btn-estimate" onclick="estimateCoords()">根据地址自动估算</button>
+            </div>
+            <div class="form-actions">
+                <button class="btn-cancel" onclick="closeFormPanel()">取消</button>
+                <button class="btn-submit" onclick="submitForm()">提交</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirm Modal -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal-box">
+            <h3>确认删除</h3>
+            <p>确定要删除 <strong id="deleteSchoolName"></strong> 吗？此操作不可撤销。</p>
+            <div class="modal-actions">
+                <button class="modal-btn-cancel" onclick="closeDeleteModal()">取消</button>
+                <button class="modal-btn-confirm-delete" onclick="confirmDelete()">确认删除</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <div class="footer">
+        数据来源于公开网络信息（新闻报道、工商注册信息等），仅供参考。部分信息可能存在更新延迟或不准确。
+        <br>点击学校标记可查看详情，「天眼查」按钮可跳转查询企业工商信息。
+    </div>
+
+    <script>
+    // ==================== 内置默认数据（42所学校） ====================
+    var defaultSchools = [
+        {
+            name: '临沂网戒中心（杨永信）',
+            fullName: '临沂市第四人民医院网络成瘾戒治中心',
+            province: '山东',
+            city: '临沂市',
+            county: '',
+            address: '临沂市第四人民医院（临沂市精神卫生中心）内',
+            lng: 118.35,
+            lat: 35.10,
+            year: 2006,
+            legalPerson: '杨永信',
+            registeredCapital: '事业单位',
+            tuition: '未公开',
+            students: '未公开',
+            status: 'closed',
+            statusText: '2016年关停',
+            creditCode: '12371300495170780D',
+            tianyanchaKeyword: '临沂市精神卫生中心',
+            event: '使用「电击疗法」（DX-IIA型电休克治疗仪）治疗网瘾，即臭名昭著的「十三号室」。2009年被央视曝光，卫生部叫停电刺激治疗。2016年关停。',
+            eventYear: 2009,
+            majorEvent: true,
+            remark: ''
+        },
+        {
+            name: '山东科技防卫专修学院',
+            fullName: '山东科技防卫专修学院',
+            province: '山东',
+            city: '济南市',
+            county: '',
+            address: '济南市历城区郭店虞山大道中段',
+            lng: 117.20,
+            lat: 36.75,
+            year: 1996,
+            legalPerson: '闫文满（校长）',
+            registeredCapital: '未公开',
+            tuition: '未公开',
+            students: '约580余名',
+            status: 'closed',
+            statusText: '2016年被责令停止办学',
+            creditCode: '',
+            tianyanchaKeyword: '山东科技防卫专修学院',
+            event: '国内最早的戒网瘾学校之一。多名学生举报存在体罚或变相体罚行为，有学生疑从该校坠楼。2016年山东省教育厅责令立即停止办学。',
+            eventYear: 2016,
+            majorEvent: false,
+            remark: ''
+        },
+        {
+            name: '南宁起航拯救训练营',
+            fullName: '南宁起航拯救训练营',
+            province: '广西',
+            city: '南宁市',
+            county: '',
+            address: '广西南宁市（具体地址不详）',
+            lng: 108.37,
+            lat: 22.82,
+            year: 2008,
+            legalPerson: '未公开',
+            registeredCapital: '未注册',
+            tuition: '未公开',
+            students: '事发时122名学员',
+            status: 'closed',
+            statusText: '2009年被取缔',
+            creditCode: '',
+            tianyanchaKeyword: '南宁起航拯救训练营',
+            event: '2009年8月，15岁少年邓某某入营仅10余小时后被打身亡。该机构未在当地登记，属非法经营。13名嫌疑人被刑事拘留。',
+            eventYear: 2009,
+            majorEvent: true,
+            remark: ''
+        },
+        {
+            name: '重庆大东方行走学校',
+            fullName: '重庆大东方行走学校',
+            province: '重庆',
+            city: '渝北区',
+            county: '',
+            address: '重庆市渝北区',
+            lng: 106.63,
+            lat: 29.72,
+            year: 2006,
+            legalPerson: '未公开',
+            registeredCapital: '未公开',
+            tuition: '未公开',
+            students: '不详',
+            status: 'closed',
+            statusText: '2009年被通报关停',
+            creditCode: '',
+            tianyanchaKeyword: '重庆大东方行走学校',
+            event: '2007年被曝光，北京男孩小志在该校教官打骂下屡次自杀。学生写求救纸条控诉教官「暴行」。2009年教育部正式通报其违规办学。',
+            eventYear: 2007,
+            majorEvent: true,
+            remark: ''
+        },
+        {
+            name: '江西豫章书院',
+            fullName: '南昌市青山湖区豫章书院修身教育专修学校',
+            province: '江西',
+            city: '南昌市',
+            county: '',
+            address: '南昌市青山湖区',
+            lng: 115.89,
+            lat: 28.68,
+            year: 2013,
+            legalPerson: '任伟强（法人）/ 吴军豹（实际创办人）',
+            registeredCapital: '30万元',
+            tuition: '未公开',
+            students: '未公开',
+            status: 'closed',
+            statusText: '2017年11月注销停办',
+            creditCode: '5236011106971110X9',
+            tianyanchaKeyword: '豫章书院修身教育专修学校',
+            event: '体罚、打戒尺、打「龙鞭」、关「小黑屋」等。2017年10月被曝光，11月注销停办。2020年吴军豹等被判非法拘禁罪。国内学生起诉此类机构的首例案件。',
+            eventYear: 2017,
+            majorEvent: true,
+            remark: ''
+        },
+        {
+            name: '陕西阳虎教育',
+            fullName: '陕西阳虎教育红河谷文化补习机构',
+            province: '陕西',
+            city: '宝鸡市眉县',
+            county: '',
+            address: '宝鸡市眉县营头镇（原华西大学校区）',
+            lng: 107.75,
+            lat: 34.27,
+            year: 2005,
+            legalPerson: '王阳虎',
+            registeredCapital: '未公开',
+            tuition: '未公开',
+            students: '未公开',
+            status: 'closed',
+            statusText: '2018年被取缔',
+            creditCode: '',
+            tianyanchaKeyword: '陕西阳虎教育',
+            event: '被称为「中国教育界的西点军校」。多次被曝虐待殴打学生。2017年被蓝田县取缔后搬至眉县，2018年眉县政府依法予以取缔。',
+            eventYear: 2017,
+            majorEvent: false,
+            remark: ''
+        },
+        {
+            name: '郑州搏强新观念培训学校',
+            fullName: '郑州搏强新观念生活培训学校',
+            province: '河南',
+            city: '郑州市',
+            county: '',
+            address: '河南省郑州市',
+            lng: 113.65,
+            lat: 34.76,
+            year: 2010,
+            legalPerson: '未公开',
+            registeredCapital: '未公开',
+            tuition: '未公开',
+            students: '不详',
+            status: 'closed',
+            statusText: '2014年被关停',
+            creditCode: '',
+            tianyanchaKeyword: '郑州搏强新观念生活培训学校',
+            event: '2014年5月，19岁女孩玲玲因去厕所未报告被强制「加训」数小时后死亡。警方认定死伤与学校「训练」有因果关系。办学资质被取缔。',
+            eventYear: 2014,
+            majorEvent: true,
+            remark: ''
+        },
+        {
+            name: '广州搏强青少年特训学校',
+            fullName: '广州搏强青少年特训学校',
+            province: '广东',
+            city: '广州市',
+            county: '',
+            address: '广东省广州市',
+            lng: 113.26,
+            lat: 23.13,
+            year: 2010,
+            legalPerson: '未公开',
+            registeredCapital: '未公开',
+            tuition: '未公开',
+            students: '不详',
+            status: 'closed',
+            statusText: '2014年被关停',
+            creditCode: '',
+            tianyanchaKeyword: '广州搏强青少年特训学校',
+            event: '2014年因虐待学生被媒体曝光并最终关停。',
+            eventYear: 2014,
+            majorEvent: false,
+            remark: ''
+        },
+        {
+            name: '合肥正能青少年特训学校',
+            fullName: '合肥正能青少年特训学校',
+            province: '安徽',
+            city: '合肥市',
+            county: '',
+            address: '安徽省合肥市',
+            lng: 117.28,
+            lat: 31.86,
+            year: 2014,
+            legalPerson: '未公开',
+            registeredCapital: '未公开',
+            tuition: '未公开',
+            students: '不详',
+            status: 'closed',
+            statusText: '2017年被曝光关停',
+            creditCode: '',
+            tianyanchaKeyword: '合肥正能青少年特训学校',
+            event: '2017年8月，安徽少年李傲被送入该校「戒网瘾」，不到48小时后死亡。死因与高温、限制体位、缺乏进食饮水、外伤等因素有关。',
+            eventYear: 2017,
+            majorEvent: true,
+            remark: ''
+        },
+        {
+            name: '河南雅圣思素质教育基地',
+            fullName: '河南省雅圣思青少年素质教育基地',
+            province: '河南',
+            city: '郑州市中牟县',
+            county: '',
+            address: '郑州市中牟县',
+            lng: 113.98,
+            lat: 34.72,
+            year: 2018,
+            legalPerson: '陈米民（法人）/ 陈海文（大股东）',
+            registeredCapital: '1000万元（实缴0）',
+            tuition: '约48,800元/期',
+            students: '不详',
+            status: 'closed',
+            statusText: '2023年被关停',
+            creditCode: '',
+            tianyanchaKeyword: '河南省雅圣思教育科技有限公司',
+            event: '2023年被曝长期打骂体罚学生（皮带抽人、背轮胎跑步、扇巴掌、喷辣椒水等）。教官与未满16岁女学员发生性关系。中牟县教体局确认关停。',
+            eventYear: 2023,
+            majorEvent: true,
+            remark: ''
+        },
+        {
+            name: '河南柯贞素质拓展营',
+            fullName: '河南柯贞素质拓展营',
+            province: '河南',
+            city: '郑州市中牟县',
+            county: '',
+            address: '郑州市中牟县',
+            lng: 113.95,
+            lat: 34.70,
+            year: 2022,
+            legalPerson: '未公开',
+            registeredCapital: '未公开',
+            tuition: '未公开',
+            students: '不详',
+            status: 'closed',
+            statusText: '2024年9月被关停',
+            creditCode: '',
+            tianyanchaKeyword: '柯贞素质拓展营',
+            event: '2024年6-9月，14岁女孩小王遭教官体罚虐待，因身体电解质紊乱抢救一个月后死亡。另有教官被控强制猥亵多名未成年人。两名涉事教官被刑事拘留。',
+            eventYear: 2024,
+            majorEvent: true,
+            remark: ''
+        },
+        {
+            name: '石家庄市育德学校',
+            fullName: '石家庄市育德学校',
+            province: '河北',
+            city: '石家庄市',
+            county: '',
+            address: '石家庄市桥西区友谊北大街',
+            lng: 114.48,
+            lat: 38.05,
+            year: 2003,
+            legalPerson: '徐秀云',
+            registeredCapital: '8万元',
+            tuition: '未公开',
+            students: '不详',
+            status: 'closed',
+            statusText: '已注销',
+            creditCode: '52130104748493503B',
+            tianyanchaKeyword: '石家庄市育德学校',
+            event: '已注销。',
+            eventYear: null,
+            majorEvent: false,
+            remark: ''
+        },
+        {
+            name: '湘阴县圣博青少年心理成长学校',
+            fullName: '湘阴县圣博青少年心理成长培训学校（曾用名：慧腾青少年成长训练营）',
+            province: '湖南',
+            city: '岳阳市湘阴县',
+            county: '',
+            address: '岳阳市湘阴县袁家铺镇沙湖村',
+            lng: 112.88,
+            lat: 28.68,
+            year: 2008,
+            legalPerson: '林涯',
+            registeredCapital: '10万元',
+            tuition: '未公开',
+            students: '不详',
+            status: 'closed',
+            statusText: '已撤销',
+            creditCode: '5243062467358600XQ',
+            tianyanchaKeyword: '湘阴县圣博青少年心理成长培训学校',
+            event: '已撤销。',
+            eventYear: null,
+            majorEvent: false,
+            remark: ''
+        },
+        {
+            name: '湖南仰志青少年特训学校',
+            fullName: '湖南仰志青少年特训学校',
+            province: '湖南',
+            city: '长沙市',
+            county: '',
+            address: '湖南省长沙市',
+            lng: 112.94,
+            lat: 28.23,
+            year: 2006,
+            legalPerson: '姚海平',
+            registeredCapital: '200万元',
+            tuition: '未公开',
+            students: '不详',
+            status: 'closed',
+            statusText: '关联公司已吊销',
+            creditCode: '',
+            tianyanchaKeyword: '湖南仰志教育咨询服务有限公司',
+            event: '关联公司已被吊销。',
+            eventYear: null,
+            majorEvent: false,
+            remark: ''
+        },
+        {
+            name: '四川新巴蜀特训营',
+            fullName: '四川新巴蜀特训营',
+            province: '四川',
+            city: '成都市',
+            county: '',
+            address: '四川省成都市',
+            lng: 104.07,
+            lat: 30.67,
+            year: 2018,
+            legalPerson: '未公开',
+            registeredCapital: '未公开',
+            tuition: '未公开',
+            students: '不详',
+            status: 'closed',
+            statusText: '2024年被曝光',
+            creditCode: '',
+            tianyanchaKeyword: '新巴蜀特训营',
+            event: '2024年被曝光存在体罚学生事件，学员因小事即遭教官打骂。',
+            eventYear: 2024,
+            majorEvent: false,
+            remark: ''
+        },
+        {
+            name: '北京青少年心理成长基地',
+            fullName: '中国青少年心理成长基地（北京军区总医院）',
+            province: '北京',
+            city: '北京市大兴区',
+            county: '',
+            address: '北京市大兴区',
+            lng: 116.34,
+            lat: 39.73,
+            year: 2004,
+            legalPerson: '陶然（主任）',
+            registeredCapital: '事业单位',
+            tuition: '未公开',
+            students: '10余年接收7000余人',
+            status: 'closed',
+            statusText: '已关闭',
+            creditCode: '',
+            tianyanchaKeyword: '中国青少年心理成长基地',
+            event: '国内最早的正规戒网瘾机构之一，由北京军区总医院成瘾医学中心主任陶然负责。',
+            eventYear: null,
+            majorEvent: false,
+            remark: ''
+        },
+        {
+            name: '长沙县杰龙励志专门学校',
+            fullName: '长沙县杰龙励志专门学校（曾用名：杰龙青少年特训学校）',
+            province: '湖南',
+            city: '长沙市长沙县',
+            county: '',
+            address: '长沙县江背镇乌川湖村',
+            lng: 113.08,
+            lat: 28.25,
+            year: 2006,
+            legalPerson: '曾娟',
+            registeredCapital: '16.8万元',
+            tuition: '按课程和培训时长收费',
+            students: '全国5大分校，超千人，累计服务超10万家庭',
+            status: 'open',
+            statusText: '正常运营',
+            creditCode: '524301210682028565',
+            tianyanchaKeyword: '长沙县杰龙励志专门学校',
+            event: '',
+            eventYear: null,
+            majorEvent: false,
+            remark: ''
+        },
+        {
+            name: '湖北正苗启德特训学校',
+            fullName: '汉川市正苗启德青少年特训学校',
+            province: '湖北',
+            city: '孝感市汉川市',
+            county: '',
+            address: '汉川市马口镇',
+            lng: 113.76,
+            lat: 30.68,
+            year: 2007,
+            legalPerson: '段喜明',
+            registeredCapital: '695万元',
+            tuition: '按校区和课程不同收费',
+            students: '场地超20亩，师资超80人，累计服务超3000户',
+            status: 'open',
+            statusText: '正常运营',
+            creditCode: '52420984MJH846823G',
+            tianyanchaKeyword: '汉川市正苗启德青少年特训学校',
+            event: '经汉川市人民政府审批、教育局备案。全国多地设有分校（含昆明等）。',
+            eventYear: null,
+            majorEvent: false,
+            remark: ''
+        },
+        {
+            name: '护航教育矫正中心',
+            fullName: '护航教育（护航教育深圳有限公司/广州护航教育科技有限公司）',
+            province: '广东',
+            city: '广州市/深圳市',
+            county: '',
+            address: '深圳市宝安区沙井街道；广州市增城区荔新十二路96号',
+            lng: 113.85,
+            lat: 23.05,
+            year: 2019,
+            legalPerson: '杜玉飞',
+            registeredCapital: '深圳100万/广州1000万',
+            tuition: '未公开',
+            students: '师资近600人，累计服务超6万人次',
+            status: 'open',
+            statusText: '正常运营',
+            creditCode: '',
+            tianyanchaKeyword: '护航教育深圳有限公司',
+            event: '在江苏、山东、四川等地设有分校。专注青少年网瘾矫正与行为矫正。',
+            eventYear: null,
+            majorEvent: false,
+            remark: ''
+        },
+        {
+            name: '武汉纽特教育',
+            fullName: '武汉纽特心理咨询有限公司（纽特教育）',
+            province: '湖北',
+            city: '武汉市',
+            county: '',
+            address: '武汉市东湖生态旅游风景区',
+            lng: 114.40,
+            lat: 30.55,
+            year: 2014,
+            legalPerson: '江普',
+            registeredCapital: '300万元',
+            tuition: '未公开',
+            students: '占地11万㎡，心理咨询师80多位',
+            status: 'open',
+            statusText: '正常运营',
+            creditCode: '',
+            tianyanchaKeyword: '武汉纽特心理咨询有限公司',
+            event: '自称「央视推荐」品牌。2023年广州纽特教育因涉嫌非法拘禁被立案调查。',
+            eventYear: 2023,
+            majorEvent: false,
+            remark: ''
+        },
+        {
+            name: '济南未来精英素质教育学校',
+            fullName: '济南未来精英素质教育学校',
+            province: '山东',
+            city: '济南市长清区',
+            county: '',
+            address: '长清区文昌街道长孝路西李村1108号',
+            lng: 116.75,
+            lat: 36.55,
+            year: 2002,
+            legalPerson: '曹士昌',
+            registeredCapital: '30万元',
+            tuition: '未公开',
+            students: '占地50余亩，教学面积12000余㎡',
+            status: 'open',
+            statusText: '正常运营',
+            creditCode: '',
+            tianyanchaKeyword: '济南未来精英教育有限公司',
+            event: '经教育局和司法局双批准设立。济南市心理咨询师协会单位。',
+            eventYear: null,
+            majorEvent: false,
+            remark: ''
+        },
+        {
+            name: '湖南志和教育',
+            fullName: '长沙县志和培训学校有限公司（志和教育）',
+            province: '湖南',
+            city: '长沙市长沙县',
+            county: '',
+            address: '长沙县春华镇百熙村刘家坡',
+            lng: 113.20,
+            lat: 28.35,
+            year: 2008,
+            legalPerson: '金毅',
+            registeredCapital: '100.161万元',
+            tuition: '约4000-8000元/月',
+            students: '小班制，每班8-12人',
+            status: 'open',
+            statusText: '正常运营',
+            creditCode: '',
+            tianyanchaKeyword: '长沙县志和培训学校有限公司',
+            event: '',
+            eventYear: null,
+            majorEvent: false,
+            remark: ''
+        },
+        {
+            name: '重庆环帝锦辉素质教育基地',
+            fullName: '重庆环帝锦辉青少年素质教育基地',
+            province: '重庆',
+            city: '沙坪坝区',
+            county: '',
+            address: '沙坪坝区歌乐山脉中梁镇龙泉村',
+            lng: 106.40,
+            lat: 29.58,
+            year: 2007,
+            legalPerson: '胡波',
+            registeredCapital: '未公开',
+            tuition: '未公开',
+            students: '占地110亩',
+            status: 'open',
+            statusText: '正常运营',
+            creditCode: '91500106MAABUJPR0X',
+            tianyanchaKeyword: '重庆环帝锦辉拓展训练有限公司',
+            event: '经教育主管部门批准并备案。',
+            eventYear: null,
+            majorEvent: false,
+            remark: ''
+        },
+        {
+            name: '广西亮星励志教育',
+            fullName: '广西亮星励志教育',
+            province: '广西',
+            city: '南宁市江南区',
+            county: '',
+            address: '南宁市江南区',
+            lng: 108.27,
+            lat: 22.79,
+            year: 2013,
+            legalPerson: '未公开',
+            registeredCapital: '未公开',
+            tuition: '未公开',
+            students: '不详',
+            status: 'open',
+            statusText: '正常运营',
+            creditCode: '',
+            tianyanchaKeyword: '广西亮星教育',
+            event: '南宁本地老牌教育机构，全封闭独立园区。',
+            eventYear: null,
+            majorEvent: false,
+            remark: ''
+        },
+        {
+            name: '雷鹰特训素质教育基地',
+            fullName: '雷鹰特训青少年素质教育基地（广州雷鹰突击拓展训练有限公司）',
+            province: '广东',
+            city: '广州市',
+            county: '',
+            address: '广州市（佛山、揭阳有校区）',
+            lng: 113.30,
+            lat: 23.10,
+            year: 2019,
+            legalPerson: '张献杜',
+            registeredCapital: '100万元',
+            tuition: '未公开',
+            students: '占地约25-50亩，可容纳约210人',
+            status: 'open',
+            statusText: '正常运营',
+            creditCode: '',
+            tianyanchaKeyword: '广州雷鹰突击拓展训练有限公司',
+            event: '面向8-18岁存在网瘾、厌学、叛逆等问题的青少年。',
+            eventYear: null,
+            majorEvent: false,
+            remark: ''
+        },
+        {
+            name: '华心少年军校',
+            fullName: '华心少年军校',
+            province: '河南',
+            city: '郑州市新郑市',
+            county: '',
+            address: '新郑市龙湖镇梅山村（龙祥路30号梅山）',
+            lng: 113.72,
+            lat: 34.40,
+            year: 2016,
+            legalPerson: '未公开',
+            registeredCapital: '未公开',
+            tuition: '按周期及班型收费',
+            students: '不详',
+            status: 'open',
+            statusText: '正常运营',
+            creditCode: '',
+            tianyanchaKeyword: '华心少年军校',
+            event: '位于河南省校园安全教育基地。全封闭式军事化管理。',
+            eventYear: null,
+            majorEvent: false,
+            remark: ''
+        },
+        {
+            name: '肇庆市立德学校',
+            fullName: '肇庆市立德学校',
+            province: '广东',
+            city: '肇庆市',
+            county: '',
+            address: '肇庆市端州区睦岗镇下外坑纺织路',
+            lng: 112.47,
+            lat: 23.07,
+            year: 2015,
+            legalPerson: '潘煕健',
+            registeredCapital: '3万元',
+            tuition: '未公开',
+            students: '不详',
+            status: 'open',
+            statusText: '正常运营',
+            creditCode: '52441200324930060A',
+            tianyanchaKeyword: '肇庆市立德学校',
+            event: '对外以「网瘾学校、叛逆少年教育学校」名义招生。',
+            eventYear: null,
+            majorEvent: false,
+            remark: ''
+        },
+        {
+            name: '茂名春雨学校',
+            fullName: '茂名市茂南区春雨学校',
+            province: '广东',
+            city: '茂名市',
+            county: '',
+            address: '茂名市茂南区袂花镇',
+            lng: 110.93,
+            lat: 21.66,
+            year: 2021,
+            legalPerson: '马献龙',
+            registeredCapital: '30万元',
+            tuition: '未公开',
+            students: '不详',
+            status: 'open',
+            statusText: '正常运营',
+            creditCode: '',
+            tianyanchaKeyword: '茂名市茂南区春雨学校',
+            event: '由茂名区教育局批准成立的民办全日制中小学学校。',
+            eventYear: null,
+            majorEvent: false,
+            remark: ''
+        },
+        {
+            name: '安徽猎鹰军拓素质教育',
+            fullName: '安徽猎鹰军拓体育文化有限公司',
+            province: '安徽',
+            city: '合肥市肥东县',
+            county: '',
+            address: '合肥市肥东县',
+            lng: 117.47,
+            lat: 31.88,
+            year: 2021,
+            legalPerson: '张奎',
+            registeredCapital: '500万元',
+            tuition: '未公开',
+            students: '不详',
+            status: 'open',
+            statusText: '正常运营',
+            creditCode: '',
+            tianyanchaKeyword: '安徽猎鹰军拓体育文化有限公司',
+            event: '针对10-17周岁青少年进行心理疏导、行为矫正培训教育。',
+            eventYear: null,
+            majorEvent: false,
+            remark: ''
+        },
+        {
+            name: '重庆锦辉素质教育基地',
+            fullName: '重庆锦辉拓展训练有限公司（锦辉青少年素质教育基地）',
+            province: '重庆',
+            city: '沙坪坝区',
+            county: '',
+            address: '沙坪坝区中梁镇龙泉村',
+            lng: 106.38,
+            lat: 29.56,
+            year: 2007,
+            legalPerson: '程鑫',
+            registeredCapital: '30万元',
+            tuition: '未公开',
+            students: '自称2007年成立，占地110亩',
+            status: 'open',
+            statusText: '正常运营',
+            creditCode: '91500107MA5UUA1M0U',
+            tianyanchaKeyword: '重庆锦辉拓展训练有限公司',
+            event: '',
+            eventYear: null,
+            majorEvent: false,
+            remark: ''
+        },
+        {
+            name: '四川华弟心理咨询服务',
+            fullName: '四川华弟心理咨询服务有限公司',
+            province: '四川',
+            city: '成都市大邑县',
+            county: '',
+            address: '大邑县晋原街道鹤翔大道258号',
+            lng: 103.52,
+            lat: 30.59,
+            year: 2012,
+            legalPerson: '张龙',
+            registeredCapital: '50万元',
+            tuition: '未公开',
+            students: '不详',
+            status: 'open',
+            statusText: '正常运营',
+            creditCode: '91510129MAK133340W',
+            tianyanchaKeyword: '四川华弟心理咨询服务有限公司',
+            event: '对外宣传「自2012年创办」，专注10-18岁青少年叛逆行为矫正。',
+            eventYear: null,
+            majorEvent: false,
+            remark: ''
+        },
+        {
+            name: '三门峡励萱教育',
+            fullName: '三门峡励萱教育信息咨询有限公司',
+            province: '河南',
+            city: '三门峡市',
+            county: '',
+            address: '三门峡市城乡一体化示范区北朝村小学旧址',
+            lng: 111.20,
+            lat: 34.77,
+            year: 2022,
+            legalPerson: '张鑫/孟素德',
+            registeredCapital: '各100万元',
+            tuition: '未公开',
+            students: '不详',
+            status: 'open',
+            statusText: '正常运营（有争议）',
+            creditCode: '',
+            tianyanchaKeyword: '三门峡励萱教育信息咨询有限公司',
+            event: '2025年被曝光：21岁女大学生被父母骗入该机构，遭非法拘禁11天，被打至尿失禁。警方判定「无犯罪事实」引发争议。',
+            eventYear: 2025,
+            majorEvent: true,
+            remark: ''
+        },
+        {
+            name: '石家庄谦禾教育学校',
+            fullName: '谦禾教育学校',
+            province: '河北',
+            city: '石家庄市',
+            county: '',
+            address: '河北省石家庄市',
+            lng: 114.52,
+            lat: 38.04,
+            year: 2015,
+            legalPerson: '未公开',
+            registeredCapital: '未公开',
+            tuition: '未公开',
+            students: '不详',
+            status: 'unknown',
+            statusText: '状态不明',
+            creditCode: '',
+            tianyanchaKeyword: '谦禾教育',
+            event: '全国二十余省设有校区。封闭式校园实施24小时陪护。',
+            eventYear: null,
+            majorEvent: false,
+            remark: ''
+        },
+        {
+            name: '济南启德励志教育学校',
+            fullName: '济南启德励志教育学校',
+            province: '山东',
+            city: '济南市',
+            county: '',
+            address: '济南市历下区文化西路15号千佛山大厦',
+            lng: 117.03,
+            lat: 36.66,
+            year: 2010,
+            legalPerson: '未公开',
+            registeredCapital: '未公开',
+            tuition: '未公开',
+            students: '不详',
+            status: 'open',
+            statusText: '正常运营',
+            creditCode: '',
+            tianyanchaKeyword: '济南市历下区启德培训学校有限公司',
+            event: '宣传称「深耕20余年」，拥有正规办学许可。',
+            eventYear: null,
+            majorEvent: false,
+            remark: ''
+        },
+        {
+            name: '山东现代青少年素质教育学校',
+            fullName: '山东现代青少年素质教育学校',
+            province: '山东',
+            city: '济南市章丘区',
+            county: '',
+            address: '济南市章丘区',
+            lng: 117.53,
+            lat: 36.72,
+            year: 2015,
+            legalPerson: '未公开',
+            registeredCapital: '未公开',
+            tuition: '未公开',
+            students: '累计服务超800名学员',
+            status: 'open',
+            statusText: '正常运营',
+            creditCode: '',
+            tianyanchaKeyword: '山东现代青少年素质教育学校',
+            event: '济南本地有正规备案的辅导基地，主打军事化管理特色。',
+            eventYear: null,
+            majorEvent: false,
+            remark: ''
+        },
+        {
+            name: '昆明正苗启德夏令营',
+            fullName: '昆明正苗启德夏令营有限公司',
+            province: '云南',
+            city: '昆明市',
+            county: '',
+            address: '云南省昆明市',
+            lng: 102.83,
+            lat: 25.04,
+            year: 2024,
+            legalPerson: '未公开',
+            registeredCapital: '未公开',
+            tuition: '未公开',
+            students: '不详',
+            status: 'open',
+            statusText: '正常运营',
+            creditCode: '',
+            tianyanchaKeyword: '昆明正苗启德夏令营有限公司',
+            event: '正苗启德在昆明的分支。',
+            eventYear: null,
+            majorEvent: false,
+            remark: ''
+        },
+        {
+            name: '昆明全人青少年素质教育学校',
+            fullName: '昆明全人青少年素质教育学校',
+            province: '云南',
+            city: '昆明市',
+            county: '',
+            address: '云南省昆明市',
+            lng: 102.70,
+            lat: 25.02,
+            year: 2018,
+            legalPerson: '未公开',
+            registeredCapital: '未公开',
+            tuition: '未公开',
+            students: '不详',
+            status: 'unknown',
+            statusText: '状态不明',
+            creditCode: '',
+            tianyanchaKeyword: '昆明全人青少年素质教育学校',
+            event: '',
+            eventYear: null,
+            majorEvent: false,
+            remark: ''
+        },
+        {
+            name: '河南聚贤崇本教育基地',
+            fullName: '河南聚贤崇本教育咨询有限公司',
+            province: '河南',
+            city: '郑州市',
+            county: '',
+            address: '郑州市金水区（基地位于新密）',
+            lng: 113.65,
+            lat: 34.75,
+            year: 2023,
+            legalPerson: '郭瑞',
+            registeredCapital: '100万元',
+            tuition: '未公开',
+            students: '不详',
+            status: 'open',
+            statusText: '正常运营',
+            creditCode: '91410105MA9NPBE77H',
+            tianyanchaKeyword: '河南聚贤崇本教育咨询有限公司',
+            event: '对外以「青少年教育基地、矫正特训」名义招生。',
+            eventYear: null,
+            majorEvent: false,
+            remark: ''
+        },
+        {
+            name: '郑州汉飞训练',
+            fullName: '郑州汉飞教育信息咨询有限公司',
+            province: '河南',
+            city: '郑州市',
+            county: '',
+            address: '河南省郑州市',
+            lng: 113.62,
+            lat: 34.78,
+            year: 2009,
+            legalPerson: '张俊',
+            registeredCapital: '10万元',
+            tuition: '未公开',
+            students: '不详',
+            status: 'open',
+            statusText: '存续',
+            creditCode: '91410105684627823P',
+            tianyanchaKeyword: '郑州汉飞教育信息咨询有限公司',
+            event: '对外以「戒网瘾学校」名义招生，实际注册为教育信息咨询公司。',
+            eventYear: null,
+            majorEvent: false,
+            remark: ''
+        },
+        {
+            name: '南京明素教育培训中心',
+            fullName: '南京明素教育培训中心',
+            province: '江苏',
+            city: '南京市',
+            county: '',
+            address: '南京市江宁区东新南路6号2楼',
+            lng: 118.85,
+            lat: 31.95,
+            year: 2022,
+            legalPerson: '欧素素',
+            registeredCapital: '50万元',
+            tuition: '未公开',
+            students: '不详',
+            status: 'unknown',
+            statusText: '状态不明',
+            creditCode: '',
+            tianyanchaKeyword: '南京明素教育培训中心',
+            event: '该机构主要经营K12学科教育培训，非专门的戒网瘾/特训机构。南京地区未查到明确以行为矫正为主营的知名机构。',
+            eventYear: null,
+            majorEvent: false,
+            remark: ''
+        },
+        {
+            name: '成都新都区青少年特训学校',
+            fullName: '成都新都区青少年特训学校',
+            province: '四川',
+            city: '成都市新都区',
+            county: '',
+            address: '成都市新都区',
+            lng: 104.16,
+            lat: 30.83,
+            year: 2018,
+            legalPerson: '未公开',
+            registeredCapital: '未公开',
+            tuition: '未公开',
+            students: '不详',
+            status: 'closed',
+            statusText: '2023年被举报调查',
+            creditCode: '',
+            tianyanchaKeyword: '成都新都区青少年特训学校',
+            event: '2023年被网友举报存在冒充民警、殴打学生情况，多部门介入调查。',
+            eventYear: 2023,
+            majorEvent: false,
+            remark: ''
+        },
+        {
+            name: '湖南泽邦教育',
+            fullName: '湖南泽邦教育',
+            province: '湖南',
+            city: '长沙市长沙县',
+            county: '',
+            address: '长沙县',
+            lng: 113.10,
+            lat: 28.22,
+            year: 2007,
+            legalPerson: '未公开',
+            registeredCapital: '未公开',
+            tuition: '未公开',
+            students: '不详',
+            status: 'unknown',
+            statusText: '状态不明',
+            creditCode: '',
+            tianyanchaKeyword: '湖南泽邦教育',
+            event: '经当地教育局批准创办，湖南地区较有影响力的戒网瘾学校之一。',
+            eventYear: null,
+            majorEvent: false,
+            remark: ''
+        }
+    ];
+
+    // ==================== 省份列表 ====================
+    var provinceList = [
+        '北京','天津','上海','重庆','河北','山西','辽宁','吉林','黑龙江',
+        '江苏','浙江','安徽','福建','江西','山东','河南','湖北','湖南',
+        '广东','海南','四川','贵州','云南','陕西','甘肃','青海','台湾',
+        '内蒙古','广西','西藏','宁夏','新疆','香港','澳门'
+    ];
+
+    // ==================== 城市经纬度对照表（省会+主要城市） ====================
+    var cityCoords = {
+        // 直辖市
+        '北京': [116.41, 39.90], '天津': [117.20, 39.13], '上海': [121.47, 31.23], '重庆': [106.55, 29.56],
+        '北京市': [116.41, 39.90], '天津市': [117.20, 39.13], '上海市': [121.47, 31.23], '重庆市': [106.55, 29.56],
+        // 河北
+        '石家庄': [114.51, 38.04], '石家庄市': [114.51, 38.04], '唐山': [118.18, 39.63], '保定': [115.46, 38.87],
+        '秦皇岛': [119.60, 39.94], '邯郸': [114.54, 36.63], '邢台': [114.51, 37.07], '廊坊': [116.70, 39.53],
+        '承德': [117.96, 40.97], '张家口': [114.88, 40.82], '沧州': [116.86, 38.31], '衡水': [115.68, 37.74],
+        // 山西
+        '太原': [112.55, 37.87], '太原市': [112.55, 37.87], '大同': [113.30, 40.08], '临汾': [111.52, 36.09],
+        '运城': [111.00, 35.03], '晋中': [112.75, 37.69],
+        // 内蒙古
+        '呼和浩特': [111.75, 40.84], '呼和浩特市': [111.75, 40.84], '包头': [109.84, 40.66], '鄂尔多斯': [109.99, 39.82],
+        '赤峰': [118.87, 42.26], '通辽': [122.26, 43.65],
+        // 辽宁
+        '沈阳': [123.43, 41.80], '沈阳市': [123.43, 41.80], '大连': [121.62, 38.92], '鞍山': [122.99, 41.11],
+        '抚顺': [123.96, 41.88], '锦州': [121.13, 41.10],
+        // 吉林
+        '长春': [125.32, 43.88], '长春市': [125.32, 43.88], '吉林': [126.55, 43.84], '延吉': [129.51, 42.89],
+        // 黑龙江
+        '哈尔滨': [126.63, 45.75], '哈尔滨市': [126.63, 45.75], '齐齐哈尔': [123.97, 47.35], '大庆': [125.10, 46.59],
+        '牡丹江': [129.59, 44.58],
+        // 江苏
+        '南京': [118.80, 32.06], '南京市': [118.80, 32.06], '苏州': [120.62, 31.30], '无锡': [120.30, 31.57],
+        '常州': [119.97, 31.81], '南通': [120.86, 31.98], '徐州': [117.19, 34.26], '扬州': [119.42, 32.39],
+        '盐城': [120.14, 33.38], '连云港': [119.18, 34.60],
+        // 浙江
+        '杭州': [120.15, 30.28], '杭州市': [120.15, 30.28], '宁波': [121.55, 29.87], '温州': [120.70, 28.00],
+        '嘉兴': [120.76, 30.75], '绍兴': [120.58, 30.00], '金华': [119.65, 29.08], '台州': [121.42, 28.66],
+        // 安徽
+        '合肥': [117.28, 31.86], '合肥市': [117.28, 31.86], '芜湖': [118.38, 31.33], '蚌埠': [117.36, 32.94],
+        '淮南': [117.01, 32.63], '马鞍山': [118.51, 31.67], '安庆': [117.05, 30.53], '黄山': [118.31, 29.72],
+        '阜阳': [115.81, 32.89], '宿州': [116.96, 33.65],
+        // 福建
+        '福州': [119.30, 26.08], '福州市': [119.30, 26.08], '厦门': [118.10, 24.46], '泉州': [118.59, 24.87],
+        '漳州': [117.65, 24.51], '莆田': [119.01, 25.45],
+        // 江西
+        '南昌': [115.89, 28.68], '南昌市': [115.89, 28.68], '九江': [115.99, 29.71], '赣州': [114.94, 25.85],
+        '景德镇': [117.21, 29.29], '上饶': [117.97, 28.45], '吉安': [114.99, 27.11],
+        // 山东
+        '济南': [117.00, 36.67], '济南市': [117.00, 36.67], '青岛': [120.38, 36.07], '烟台': [121.45, 37.46],
+        '潍坊': [119.16, 36.71], '临沂': [118.35, 35.10], '济宁': [116.59, 35.41], '淄博': [118.05, 36.81],
+        '威海': [122.12, 37.51], '德州': [116.36, 37.44], '泰安': [117.13, 36.19], '聊城': [115.98, 36.46],
+        '菏泽': [115.47, 35.25], '枣庄': [117.32, 34.81], '日照': [119.46, 35.42], '滨州': [117.97, 37.38],
+        '东营': [118.67, 37.43],
+        // 河南
+        '郑州': [113.65, 34.76], '郑州市': [113.65, 34.76], '洛阳': [112.45, 34.62], '开封': [114.35, 34.79],
+        '新乡': [113.93, 35.30], '安阳': [114.39, 36.10], '许昌': [113.85, 34.04], '南阳': [112.53, 33.00],
+        '信阳': [114.07, 32.13], '周口': [114.70, 33.63], '驻马店': [114.02, 32.98], '商丘': [115.65, 34.44],
+        '焦作': [113.24, 35.22], '平顶山': [113.19, 33.77], '三门峡': [111.20, 34.77], '漯河': [114.02, 33.58],
+        '濮阳': [115.03, 35.76], '鹤壁': [114.30, 35.75], '济源': [112.60, 35.07],
+        // 湖北
+        '武汉': [114.30, 30.59], '武汉市': [114.30, 30.59], '宜昌': [111.29, 30.69], '襄阳': [112.14, 32.04],
+        '荆州': [112.24, 30.33], '黄石': [115.04, 30.20], '十堰': [110.80, 32.63], '孝感': [113.92, 30.92],
+        '黄冈': [114.87, 30.45], '咸宁': [114.32, 29.84], '鄂州': [114.89, 30.39],
+        // 湖南
+        '长沙': [112.94, 28.23], '长沙市': [112.94, 28.23], '株洲': [113.13, 27.83], '湘潭': [112.94, 27.83],
+        '衡阳': [112.57, 26.89], '岳阳': [113.13, 29.37], '常德': [111.69, 29.03], '郴州': [113.01, 25.77],
+        '邵阳': [111.47, 27.24], '益阳': [112.36, 28.55], '永州': [111.61, 26.42], '怀化': [110.00, 27.57],
+        '娄底': [112.00, 27.70], '湘西': [109.74, 28.31],
+        // 广东
+        '广州': [113.26, 23.13], '广州市': [113.26, 23.13], '深圳': [114.06, 22.55], '珠海': [113.58, 22.27],
+        '佛山': [113.12, 23.02], '东莞': [113.75, 23.05], '惠州': [114.42, 23.11], '中山': [113.38, 22.52],
+        '江门': [113.08, 22.58], '湛江': [110.36, 21.27], '茂名': [110.93, 21.66], '肇庆': [112.47, 23.07],
+        '汕头': [116.68, 23.35], '揭阳': [116.37, 23.55], '梅州': [116.12, 24.29], '清远': [113.06, 23.68],
+        '韶关': [113.60, 24.81], '河源': [114.70, 23.74], '阳江': [111.98, 21.86], '潮州': [116.63, 23.66],
+        '汕尾': [115.37, 22.79], '云浮': [112.04, 22.93],
+        // 广西
+        '南宁': [108.37, 22.82], '南宁市': [108.37, 22.82], '柳州': [109.41, 24.33], '桂林': [110.29, 25.27],
+        '北海': [109.12, 21.49], '玉林': [110.15, 22.65], '百色': [106.62, 23.90], '梧州': [111.28, 23.48],
+        '钦州': [108.62, 21.97], '贵港': [109.60, 23.10], '防城港': [108.35, 21.69],
+        // 海南
+        '海口': [110.35, 20.02], '海口市': [110.35, 20.02], '三亚': [109.51, 18.25],
+        // 四川
+        '成都': [104.07, 30.67], '成都市': [104.07, 30.67], '绵阳': [104.73, 31.47], '德阳': [104.40, 31.13],
+        '宜宾': [104.62, 28.77], '泸州': [105.44, 28.87], '南充': [106.07, 30.80], '达州': [107.47, 31.21],
+        '乐山': [103.77, 29.55], '自贡': [104.78, 29.34], '内江': [105.06, 29.58], '遂宁': [105.59, 30.53],
+        '广安': [106.63, 30.47], '眉山': [103.85, 30.08], '资阳': [104.63, 30.13], '雅安': [103.00, 29.99],
+        '巴中': [106.74, 31.87], '广元': [105.84, 32.44], '攀枝花': [101.72, 26.58],
+        // 贵州
+        '贵阳': [106.71, 26.57], '贵阳市': [106.71, 26.57], '遵义': [106.93, 27.73], '六盘水': [104.83, 26.59],
+        '安顺': [105.95, 26.25], '毕节': [105.29, 27.30], '铜仁': [109.19, 27.72],
+        // 云南
+        '昆明': [102.83, 25.04], '昆明市': [102.83, 25.04], '大理': [100.23, 25.59], '丽江': [100.23, 26.87],
+        '曲靖': [103.80, 25.49], '玉溪': [102.54, 24.35], '红河': [103.38, 23.37], '楚雄': [101.55, 25.03],
+        // 西藏
+        '拉萨': [91.11, 29.65], '拉萨市': [91.11, 29.65],
+        // 陕西
+        '西安': [108.94, 34.26], '西安市': [108.94, 34.26], '宝鸡': [107.14, 34.37], '咸阳': [108.71, 34.33],
+        '渭南': [109.51, 34.50], '延安': [109.49, 36.60], '汉中': [107.02, 33.07], '榆林': [109.73, 38.28],
+        '安康': [109.03, 32.68], '商洛': [109.94, 33.87], '铜川': [108.95, 34.90],
+        // 甘肃
+        '兰州': [103.83, 36.06], '兰州市': [103.83, 36.06], '天水': [105.72, 34.58], '白银': [104.14, 36.54],
+        '酒泉': [98.51, 39.74], '嘉峪关': [98.29, 39.77], '武威': [102.64, 37.93], '张掖': [100.45, 38.93],
+        // 青海
+        '西宁': [101.78, 36.62], '西宁市': [101.78, 36.62], '海东': [102.10, 36.50],
+        // 宁夏
+        '银川': [106.28, 38.47], '银川市': [106.28, 38.47], '吴忠': [106.20, 37.99], '固原': [106.24, 36.02],
+        // 新疆
+        '乌鲁木齐': [87.62, 43.83], '乌鲁木齐市': [87.62, 43.83], '喀什': [75.99, 39.47], '伊犁': [81.32, 43.91],
+        // 台湾
+        '台北': [121.52, 25.05], '台北市': [121.52, 25.05],
+        // 香港
+        '香港': [114.17, 22.32],
+        // 澳门
+        '澳门': [113.55, 22.20]
+    };
+
+    // 省份省会映射（用于回退）
+    var provinceCapitalCoords = {
+        '北京': [116.41, 39.90], '天津': [117.20, 39.13], '上海': [121.47, 31.23], '重庆': [106.55, 29.56],
+        '河北': [114.51, 38.04], '山西': [112.55, 37.87], '内蒙古': [111.75, 40.84],
+        '辽宁': [123.43, 41.80], '吉林': [125.32, 43.88], '黑龙江': [126.63, 45.75],
+        '江苏': [118.80, 32.06], '浙江': [120.15, 30.28], '安徽': [117.28, 31.86],
+        '福建': [119.30, 26.08], '江西': [115.89, 28.68], '山东': [117.00, 36.67],
+        '河南': [113.65, 34.76], '湖北': [114.30, 30.59], '湖南': [112.94, 28.23],
+        '广东': [113.26, 23.13], '海南': [110.35, 20.02], '四川': [104.07, 30.67],
+        '贵州': [106.71, 26.57], '云南': [102.83, 25.04], '西藏': [91.11, 29.65],
+        '陕西': [108.94, 34.26], '甘肃': [103.83, 36.06], '青海': [101.78, 36.62],
+        '宁夏': [106.28, 38.47], '新疆': [87.62, 43.83], '台湾': [121.52, 25.05],
+        '香港': [114.17, 22.32], '澳门': [113.55, 22.20], '广西': [108.37, 22.82]
+    };
+
+    // ==================== 时间线事件 ====================
+    var timelineEvents = [
+        { year: 1996, text: '山东科技防卫专修学院成立', type: 'school' },
+        { year: 2002, text: '蓝极速网吧事件，网吧大整顿', type: 'event' },
+        { year: 2004, text: '陶宏开「戒网瘾第一人」；北京心理成长基地成立', type: 'event' },
+        { year: 2005, text: '陕西阳虎教育创办', type: 'school' },
+        { year: 2006, text: '杨永信临沂网戒中心成立', type: 'critical' },
+        { year: 2007, text: '重庆大东方行走学校被曝光', type: 'critical' },
+        { year: 2007, text: '杰龙/泽邦/正苗启德等大批机构涌现', type: 'school' },
+        { year: 2008, text: '南宁起航训练营运营', type: 'school' },
+        { year: 2009, text: '南宁起航少年被打死；央视曝光杨永信', type: 'critical' },
+        { year: 2009, text: '卫生部叫停电刺激治疗网瘾', type: 'policy' },
+        { year: 2013, text: '江西豫章书院正式成立', type: 'school' },
+        { year: 2014, text: '郑州搏强学校学员死亡；广州搏强关停', type: 'critical' },
+        { year: 2016, text: '临沂网戒中心关停；山东科技防卫学院停办', type: 'event' },
+        { year: 2017, text: '豫章书院非法拘禁曝光，关停', type: 'critical' },
+        { year: 2017, text: '合肥正能特训学校学员死亡', type: 'critical' },
+        { year: 2018, text: '阳虎教育被取缔；雅圣思注册', type: 'event' },
+        { year: 2020, text: '新《未成年人保护法》通过', type: 'policy' },
+        { year: 2021, text: '新《未成年人保护法》施行', type: 'policy' },
+        { year: 2023, text: '雅圣思体罚曝光关停；成都特训学校被举报', type: 'critical' },
+        { year: 2023, text: '《未成年人网络保护条例》公布', type: 'policy' },
+        { year: 2024, text: '河南柯贞拓展营学员死亡', type: 'critical' },
+        { year: 2024, text: '《未成年人网络保护条例》施行', type: 'policy' },
+        { year: 2024, text: '「反击者联盟」青少年潜入特训学校取证', type: 'event' },
+        { year: 2025, text: '四川全省禁止戒网瘾学校/特训机构', type: 'policy' },
+        { year: 2025, text: '三门峡励萱教育非法拘禁事件', type: 'critical' }
+    ];
+
+    // ==================== 全局变量 ====================
+    var schools = [];
+    var editingIndex = -1; // -1 means adding new, >= 0 means editing
+    var deleteTargetIndex = -1;
+    var activeYear = null;
+    var myChart = null;
+    var mapLoaded = false;
+
+    // ==================== localStorage 操作 ====================
+    var STORAGE_KEY = 'wangyinSchools';
+
+    function loadSchools() {
+        var saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            try {
+                schools = JSON.parse(saved);
+            } catch (e) {
+                schools = JSON.parse(JSON.stringify(defaultSchools));
+            }
+        } else {
+            schools = JSON.parse(JSON.stringify(defaultSchools));
+            saveSchools();
+        }
+    }
+
+    function saveSchools() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(schools));
+    }
+
+    // ==================== 统计数据更新 ====================
+    function updateStats() {
+        var total = schools.length;
+        var closed = schools.filter(function(s) { return s.status === 'closed'; }).length;
+        var open = schools.filter(function(s) { return s.status === 'open'; }).length;
+        var provSet = {};
+        schools.forEach(function(s) { provSet[s.province] = true; });
+        var provCount = Object.keys(provSet).length;
+
+        document.getElementById('total-count').textContent = total;
+        document.getElementById('closed-count').textContent = closed;
+        document.getElementById('open-count').textContent = open;
+        document.getElementById('province-count').textContent = provCount;
+    }
+
+    // ==================== Toast 提示 ====================
+    function showToast(msg, type) {
+        var el = document.getElementById('toast');
+        el.textContent = msg;
+        el.className = 'toast ' + (type || 'success') + ' show';
+        setTimeout(function() { el.classList.remove('show'); }, 2500);
+    }
+
+    // ==================== 省份下拉初始化 ====================
+    function initProvinceSelect() {
+        var sel = document.getElementById('f_province');
+        sel.innerHTML = '<option value="">请选择省份</option>';
+        provinceList.forEach(function(p) {
+            var opt = document.createElement('option');
+            opt.value = p;
+            opt.textContent = p;
+            sel.appendChild(opt);
+        });
+    }
+
+    // ==================== 经纬度自动估算 ====================
+    function estimateCoords() {
+        var province = document.getElementById('f_province').value;
+        var city = document.getElementById('f_city').value;
+        var county = document.getElementById('f_county').value;
+
+        // 尝试匹配城市
+        var coords = null;
+
+        // 先尝试匹配完整城市名
+        if (city) {
+            // 去掉"市"后缀再试
+            var cityNames = [city];
+            if (city.indexOf('市') > -1) {
+                cityNames.push(city.substring(0, city.indexOf('市')));
+            }
+            // 也尝试带省份前缀
+            cityNames.push(province + city);
+
+            for (var i = 0; i < cityNames.length; i++) {
+                if (cityCoords[cityNames[i]]) {
+                    coords = cityCoords[cityNames[i]];
+                    break;
+                }
+            }
+        }
+
+        // 如果城市没匹配到，使用省份省会
+        if (!coords && province && provinceCapitalCoords[province]) {
+            coords = provinceCapitalCoords[province];
+        }
+
+        if (coords) {
+            document.getElementById('f_lng').value = coords[0];
+            document.getElementById('f_lat').value = coords[1];
+            showToast('经纬度已估算填充', 'success');
+        } else {
+            showToast('无法估算，请手动输入经纬度', 'error');
+        }
+    }
+
+    // ==================== 表单面板操作 ====================
+    function openAddForm() {
+        editingIndex = -1;
+        document.getElementById('formTitle').textContent = '添加学校';
+        clearForm();
+        openFormPanel();
+    }
+
+    function openEditForm(index) {
+        editingIndex = index;
+        document.getElementById('formTitle').textContent = '编辑学校信息';
+        fillForm(schools[index]);
+        closeInfoPanel();
+        openFormPanel();
+    }
+
+    function openFormPanel() {
+        document.getElementById('formPanel').classList.add('open');
+        document.getElementById('overlay').classList.add('show');
+    }
+
+    function closeFormPanel() {
+        document.getElementById('formPanel').classList.remove('open');
+        document.getElementById('overlay').classList.remove('show');
+        editingIndex = -1;
+    }
+
+    function clearForm() {
+        var ids = ['f_name','f_province','f_city','f_county','f_address','f_year',
+            'f_legalPerson','f_registeredCapital','f_tuition','f_students','f_status',
+            'f_creditCode','f_tianyanchaKeyword','f_event','f_eventYear','f_remark',
+            'f_lng','f_lat'];
+        ids.forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) {
+                if (el.tagName === 'SELECT') {
+                    el.selectedIndex = 0;
+                } else {
+                    el.value = '';
+                }
+            }
+        });
+        document.getElementById('f_majorEvent').checked = false;
+    }
+
+    function fillForm(s) {
+        document.getElementById('f_name').value = s.name || '';
+        document.getElementById('f_province').value = s.province || '';
+        document.getElementById('f_city').value = s.city || '';
+        document.getElementById('f_county').value = s.county || '';
+        document.getElementById('f_address').value = s.address || '';
+        document.getElementById('f_year').value = s.year || '';
+        document.getElementById('f_legalPerson').value = s.legalPerson || '';
+        document.getElementById('f_registeredCapital').value = s.registeredCapital || '';
+        document.getElementById('f_tuition').value = s.tuition || '';
+        document.getElementById('f_students').value = s.students || '';
+        document.getElementById('f_status').value = s.status || 'open';
+        document.getElementById('f_creditCode').value = s.creditCode || '';
+        document.getElementById('f_tianyanchaKeyword').value = s.tianyanchaKeyword || '';
+        document.getElementById('f_event').value = s.event || '';
+        document.getElementById('f_eventYear').value = s.eventYear || '';
+        document.getElementById('f_majorEvent').checked = !!s.majorEvent;
+        document.getElementById('f_remark').value = s.remark || '';
+        document.getElementById('f_lng').value = s.lng || '';
+        document.getElementById('f_lat').value = s.lat || '';
+    }
+
+    function submitForm() {
+        var name = document.getElementById('f_name').value.trim();
+        var province = document.getElementById('f_province').value;
+
+        if (!name) {
+            showToast('请填写学校名称', 'error');
+            return;
+        }
+        if (!province) {
+            showToast('请选择所在省份', 'error');
+            return;
+        }
+
+        var statusVal = document.getElementById('f_status').value;
+        var statusTextMap = { open: '正常运营', closed: '已关停', unknown: '状态不明' };
+
+        var schoolObj = {
+            name: name,
+            fullName: name,
+            province: province,
+            city: document.getElementById('f_city').value.trim(),
+            county: document.getElementById('f_county').value.trim(),
+            address: document.getElementById('f_address').value.trim(),
+            year: parseInt(document.getElementById('f_year').value) || null,
+            legalPerson: document.getElementById('f_legalPerson').value.trim(),
+            registeredCapital: document.getElementById('f_registeredCapital').value.trim(),
+            tuition: document.getElementById('f_tuition').value.trim(),
+            students: document.getElementById('f_students').value.trim(),
+            status: statusVal,
+            statusText: statusTextMap[statusVal] || '状态不明',
+            creditCode: document.getElementById('f_creditCode').value.trim(),
+            tianyanchaKeyword: document.getElementById('f_tianyanchaKeyword').value.trim(),
+            event: document.getElementById('f_event').value.trim(),
+            eventYear: parseInt(document.getElementById('f_eventYear').value) || null,
+            majorEvent: document.getElementById('f_majorEvent').checked,
+            remark: document.getElementById('f_remark').value.trim(),
+            lng: parseFloat(document.getElementById('f_lng').value) || 0,
+            lat: parseFloat(document.getElementById('f_lat').value) || 0
+        };
+
+        if (editingIndex >= 0) {
+            // 编辑模式
+            schoolObj.fullName = schools[editingIndex].fullName || name;
+            schools[editingIndex] = schoolObj;
+            showToast('学校信息已更新', 'success');
+        } else {
+            // 添加模式
+            schools.push(schoolObj);
+            showToast('学校已添加', 'success');
+        }
+
+        saveSchools();
+        updateStats();
+        refreshChart();
+        closeFormPanel();
+    }
+
+    // ==================== 删除操作 ====================
+    function openDeleteModal(index) {
+        deleteTargetIndex = index;
+        document.getElementById('deleteSchoolName').textContent = schools[index].name;
+        document.getElementById('deleteModal').classList.add('show');
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.remove('show');
+        deleteTargetIndex = -1;
+    }
+
+    function confirmDelete() {
+        if (deleteTargetIndex >= 0 && deleteTargetIndex < schools.length) {
+            var name = schools[deleteTargetIndex].name;
+            schools.splice(deleteTargetIndex, 1);
+            saveSchools();
+            updateStats();
+            refreshChart();
+            closeInfoPanel();
+            closeDeleteModal();
+            showToast('已删除「' + name + '」', 'success');
+        }
+    }
+
+    // ==================== 恢复默认数据 ====================
+    function restoreDefaults() {
+        schools = JSON.parse(JSON.stringify(defaultSchools));
+        saveSchools();
+        updateStats();
+        refreshChart();
+        showToast('已恢复为默认数据', 'success');
+    }
+
+    // ==================== 导出数据 ====================
+    function exportData() {
+        var json = JSON.stringify(schools, null, 2);
+        var blob = new Blob([json], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = '戒网瘾学校数据_' + new Date().toISOString().slice(0, 10) + '.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('数据已导出', 'success');
+    }
+
+    // ==================== 导入数据 ====================
+    function importData(event) {
+        var file = event.target.files[0];
+        if (!file) return;
+
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                var imported = JSON.parse(e.target.result);
+                if (!Array.isArray(imported)) {
+                    showToast('JSON格式错误：需要一个数组', 'error');
+                    return;
+                }
+                // 合并数据：以name为key去重，导入的数据覆盖已有数据
+                var existMap = {};
+                schools.forEach(function(s, i) { existMap[s.name] = i; });
+
+                var addedCount = 0;
+                var updatedCount = 0;
+                imported.forEach(function(item) {
+                    if (item.name && existMap[item.name] !== undefined) {
+                        schools[existMap[item.name]] = item;
+                        updatedCount++;
+                    } else if (item.name) {
+                        schools.push(item);
+                        addedCount++;
+                    }
+                });
+
+                saveSchools();
+                updateStats();
+                refreshChart();
+                showToast('导入完成：新增' + addedCount + '条，更新' + updatedCount + '条', 'success');
+            } catch (err) {
+                showToast('JSON解析失败：' + err.message, 'error');
+            }
+        };
+        reader.readAsText(file);
+        // 重置input，允许再次选择同一文件
+        event.target.value = '';
+    }
+
+    // ==================== 初始化 ====================
+    loadSchools();
+    initProvinceSelect();
+
+    var chartDom = document.getElementById('chart-container');
+    myChart = echarts.init(chartDom, 'dark');
+
+    updateStats();
+
+    // ==================== 时间线渲染 ====================
+    var timelineContainer = document.getElementById('timeline');
+
+    function renderTimeline() {
+        timelineContainer.innerHTML = '';
+        timelineEvents.forEach(function(evt) {
+            var div = document.createElement('div');
+            var cls = 'timeline-item';
+            if (evt.type === 'critical') cls += ' event-critical';
+            if (evt.type === 'policy') cls += ' event-policy';
+            div.className = cls;
+            div.textContent = evt.year + ' ' + evt.text;
+            div.dataset.year = evt.year;
+            div.addEventListener('click', function() {
+                if (activeYear === evt.year) {
+                    activeYear = null;
+                    document.querySelectorAll('.timeline-item').forEach(function(el) { el.classList.remove('active'); });
+                    updateChart(null);
+                } else {
+                    activeYear = evt.year;
+                    document.querySelectorAll('.timeline-item').forEach(function(el) { el.classList.remove('active'); });
+                    div.classList.add('active');
+                    updateChart(evt.year);
+                }
+            });
+            timelineContainer.appendChild(div);
+        });
+    }
+    renderTimeline();
+
+    // ==================== 地图配置 ====================
+    function getSeriesData(filterYear) {
+        return schools.map(function(s) {
+            var show = true;
+            if (filterYear !== null) {
+                show = (s.year === filterYear || s.eventYear === filterYear);
+            }
+            var colorMap = {
+                closed: '#f87171',
+                open: '#34d399',
+                unknown: '#fbbf24'
+            };
+            return {
+                name: s.name,
+                value: [s.lng, s.lat, s.year],
+                itemStyle: {
+                    color: show ? colorMap[s.status] : 'rgba(100,100,100,0.3)',
+                    shadowBlur: show ? (s.majorEvent ? 15 : 8) : 0,
+                    shadowColor: show ? (s.majorEvent ? 'rgba(244,114,182,0.6)' : colorMap[s.status] + '80') : 'transparent'
+                },
+                symbolSize: show ? (s.majorEvent ? 16 : 10) : 6,
+                label: {
+                    show: show && s.majorEvent,
+                    formatter: s.name.length > 8 ? s.name.substring(0, 8) + '...' : s.name,
+                    fontSize: 10,
+                    color: '#f472b6'
+                },
+                schoolData: s,
+                visible: show
+            };
+        });
+    }
+
+    function getOption(filterYear) {
+        var seriesData = getSeriesData(filterYear);
+
+        return {
+            backgroundColor: 'transparent',
+            tooltip: {
+                trigger: 'item',
+                backgroundColor: 'rgba(15, 20, 50, 0.95)',
+                borderColor: 'rgba(100, 140, 255, 0.3)',
+                borderWidth: 1,
+                padding: [10, 14],
+                textStyle: { color: '#e0e6f0', fontSize: 13 },
+                formatter: function(params) {
+                    var s = params.data.schoolData;
+                    if (!s) return params.name;
+                    var statusLabel = { closed: '已关停', open: '运营中', unknown: '状态不明' };
+                    return '<div style="font-weight:bold;font-size:14px;margin-bottom:6px;">' + s.name + '</div>' +
+                        '<div style="font-size:12px;color:#8892b0;">' + s.province + ' · ' + s.city + '</div>' +
+                        '<div style="margin-top:6px;">' + statusLabel[s.status] + ' | 成立于 ' + s.year + '年</div>' +
+                        '<div style="margin-top:4px;font-size:11px;color:#60a5fa;">点击查看详情</div>';
+                }
+            },
+            geo: {
+                map: 'china',
+                roam: true,
+                zoom: 1.2,
+                center: [104.5, 36],
+                scaleLimit: { min: 1, max: 8 },
+                label: {
+                    show: true,
+                    fontSize: 9,
+                    color: 'rgba(160, 174, 192, 0.6)'
+                },
+                emphasis: {
+                    label: {
+                        show: true,
+                        fontSize: 11,
+                        color: '#e0e6f0'
+                    },
+                    itemStyle: {
+                        areaColor: 'rgba(96, 165, 250, 0.15)',
+                        borderColor: '#60a5fa'
+                    }
+                },
+                itemStyle: {
+                    areaColor: 'rgba(20, 30, 70, 0.8)',
+                    borderColor: 'rgba(100, 140, 255, 0.25)',
+                    borderWidth: 0.8
+                }
+            },
+            series: [{
+                type: 'scatter',
+                coordinateSystem: 'geo',
+                data: seriesData,
+                encode: { value: 2 },
+                animation: true,
+                animationDuration: 800,
+                animationEasing: 'cubicOut'
+            }]
+        };
+    }
+
+    function updateChart(filterYear) {
+        if (myChart && mapLoaded) {
+            myChart.setOption(getOption(filterYear));
+        }
+    }
+
+    function refreshChart() {
+        if (myChart && mapLoaded) {
+            myChart.setOption(getOption(activeYear));
+        }
+    }
+
+    // 加载地图
+    fetch('https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json')
+        .then(function(res) { return res.json(); })
+        .then(function(geoJson) {
+            echarts.registerMap('china', geoJson);
+            mapLoaded = true;
+            myChart.setOption(getOption(null));
+
+            myChart.on('click', function(params) {
+                if (params.data && params.data.schoolData) {
+                    // 找到该学校在当前数组中的索引
+                    var idx = schools.findIndex(function(s) { return s.name === params.data.schoolData.name; });
+                    if (idx >= 0) {
+                        showInfoPanel(idx);
+                    }
+                }
+            });
+        })
+        .catch(function(err) {
+            console.error('地图数据加载失败:', err);
+            document.getElementById('chart-container').innerHTML =
+                '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#f87171;font-size:16px;">地图数据加载失败，请检查网络连接后刷新页面</div>';
+        });
+
+    window.addEventListener('resize', function() { if (myChart) myChart.resize(); });
+
+    // ==================== 信息面板 ====================
+    var infoPanel = document.getElementById('infoPanel');
+    var overlay = document.getElementById('overlay');
+
+    function showInfoPanel(index) {
+        var school = schools[index];
+        document.getElementById('panelTitle').textContent = school.name;
+
+        var statusEl = document.getElementById('panelStatus');
+        statusEl.textContent = school.statusText;
+        var statusClass = 'status-badge ';
+        if (school.status === 'closed') statusClass += 'status-closed';
+        else if (school.status === 'open') statusClass += 'status-open';
+        else statusClass += 'status-unknown';
+        statusEl.className = statusClass;
+
+        var html = '';
+        var rows = [
+            ['全称', school.fullName],
+            ['省份/城市', school.province + ' · ' + school.city],
+            ['地址', school.address],
+            ['成立年份', school.year ? school.year + '年' : '未公开'],
+            ['法人/负责人', school.legalPerson],
+            ['注册资本', school.registeredCapital],
+            ['学费', school.tuition],
+            ['师生人数', school.students],
+            ['信用代码', school.creditCode || '未公开']
+        ];
+
+        rows.forEach(function(row) {
+            html += '<div class="info-row"><div class="label">' + row[0] + '</div><div class="value">' + (row[1] || '未公开') + '</div></div>';
+        });
+
+        // 天眼查链接
+        if (school.tianyanchaKeyword) {
+            var searchUrl = 'https://www.tianyancha.com/search?key=' + encodeURIComponent(school.tianyanchaKeyword);
+            html += '<a class="tianyancha-btn" href="' + searchUrl + '" target="_blank" rel="noopener noreferrer">天眼查查询：' + school.tianyanchaKeyword + '</a>';
+        }
+
+        // 事件信息
+        if (school.event) {
+            html += '<div class="event-section"><h3>重要事件</h3><p>' + school.event + '</p></div>';
+        }
+
+        // 编辑/删除按钮
+        html += '<div class="info-actions">';
+        html += '<button class="btn-edit" onclick="openEditForm(' + index + ')">编辑信息</button>';
+        html += '<button class="btn-delete" onclick="openDeleteModal(' + index + ')">删除</button>';
+        html += '</div>';
+
+        document.getElementById('panelContent').innerHTML = html;
+        infoPanel.classList.add('open');
+        overlay.classList.add('show');
+    }
+
+    function closeInfoPanel() {
+        infoPanel.classList.remove('open');
+        overlay.classList.remove('show');
+    }
+
+    document.getElementById('closeBtn').addEventListener('click', closeInfoPanel);
+    document.getElementById('formCloseBtn').addEventListener('click', closeFormPanel);
+    overlay.addEventListener('click', function() {
+        closeInfoPanel();
+        closeFormPanel();
+    });
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeInfoPanel();
+            closeFormPanel();
+            closeDeleteModal();
+        }
+    });
+    </script>
+</body>
+</html>
