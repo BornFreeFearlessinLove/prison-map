@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>中国戒网瘾学校动态地图</title>
+    <link rel="icon" href="data:,">
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -2381,8 +2382,25 @@
     }
 
     // 加载地图
-    fetch('https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json')
-        .then(function(res) { return res.json(); })
+    function fetchGeoJson(url) {
+        return fetch(url, { cache: 'force-cache' }).then(function(res) {
+            if (!res.ok) throw new Error('HTTP ' + res.status + ' @ ' + url);
+            var ct = (res.headers.get('content-type') || '').toLowerCase();
+            if (ct && ct.indexOf('json') === -1) throw new Error('Invalid content-type ' + ct + ' @ ' + url);
+            return res.json();
+        });
+    }
+
+    function fetchFirstGeoJson(urls) {
+        return urls.reduce(function(promise, url) {
+            return promise.catch(function() { return fetchGeoJson(url); });
+        }, Promise.reject());
+    }
+
+    fetchFirstGeoJson([
+        'https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json',
+        'https://fastly.jsdelivr.net/gh/apache/echarts-website@asf-site/examples/data/asset/geo/China.json'
+    ])
         .then(function(geoJson) {
             echarts.registerMap('china', geoJson);
             mapLoaded = true;
@@ -2390,7 +2408,6 @@
 
             myChart.on('click', function(params) {
                 if (params.data && params.data.schoolData) {
-                    // 找到该学校在当前数组中的索引
                     var idx = schools.findIndex(function(s) { return s.name === params.data.schoolData.name; });
                     if (idx >= 0) {
                         showInfoPanel(idx);
