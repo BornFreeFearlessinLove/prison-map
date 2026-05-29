@@ -2391,16 +2391,7 @@
         });
     }
 
-    function fetchFirstGeoJson(urls) {
-        return urls.reduce(function(promise, url) {
-            return promise.catch(function() { return fetchGeoJson(url); });
-        }, Promise.reject());
-    }
-
-    fetchFirstGeoJson([
-        'https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json',
-        'https://fastly.jsdelivr.net/gh/apache/echarts-website@asf-site/examples/data/asset/geo/China.json'
-    ])
+    fetchGeoJson('./china.json')
         .then(function(geoJson) {
             echarts.registerMap('china', geoJson);
             mapLoaded = true;
